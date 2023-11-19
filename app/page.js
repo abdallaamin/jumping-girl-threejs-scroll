@@ -1,95 +1,42 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+'use client'
+import { useEffect } from "react"
+import { Canvas, useFrame } from "@react-three/fiber"
+import { useGLTF, useAnimations, useScroll, ScrollControls, SoftShadows } from "@react-three/drei"
+import { EffectComposer, TiltShift2 } from "@react-three/postprocessing"
+
+
+function Model(props) {
+  const scroll = useScroll()
+  const { nodes, materials, animations } = useGLTF("/jump-transformed.glb")
+  const { ref, actions } = useAnimations(animations)
+  useEffect(() => void (actions.jump.reset().play().paused = true), [])
+  useFrame(() => (actions.jump.time = actions.jump.getClip().duration * scroll.offset))
+  return (
+    <group {...props} ref={ref}>
+      <primitive object={nodes.mixamorigHips} />
+      <skinnedMesh castShadow receiveShadow geometry={nodes.Ch03.geometry} material={materials.Ch03_Body} skeleton={nodes.Ch03.skeleton} />
+    </group>
+  )
+}
 
 export default function Home() {
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    <Canvas shadows gl={{ antialias: false }} camera={{ position: [1, 0.5, 2.5], fov: 50 }}>
+    <color attach="background" args={["#f0f0f0"]} />
+    <fog attach="fog" args={["#f0f0f0", 0, 20]} />
+    <ambientLight intensity={0.5} />
+    <directionalLight intensity={2} position={[-5, 5, 5]} castShadow shadow-mapSize={2048} shadow-bias={-0.0001} />
+    <ScrollControls damping={0.2} maxSpeed={0.5} pages={2}>
+      <Model position={[0, -1, 0]} rotation={[Math.PI / 2, 0, 0]} scale={0.01} />
+    </ScrollControls>
+    <mesh rotation={[-0.5 * Math.PI, 0, 0]} position={[0, -1.01, 0]} receiveShadow>
+      <planeBufferGeometry args={[10, 10, 1, 1]} />
+      <shadowMaterial transparent opacity={0.75} />
+    </mesh>
+    <SoftShadows size={40} samples={16} />
+    <EffectComposer disableNormalPass multisampling={4}>
+      <TiltShift2 blur={1} />
+    </EffectComposer>
+  </Canvas>
   )
 }
